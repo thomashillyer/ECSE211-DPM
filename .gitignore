@@ -2,3 +2,5 @@ HelloWorld/
 IanCode/
 .metadata/
 .recommenders/
+*.class
+
