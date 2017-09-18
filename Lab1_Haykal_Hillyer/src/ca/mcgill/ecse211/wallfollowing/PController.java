@@ -1,13 +1,12 @@
 package ca.mcgill.ecse211.wallfollowing;
 
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-
 public class PController implements UltrasonicController {
 
 	/* Constants */
 	private static final int MOTOR_SPEED = 200;
 	private static final int FILTER_OUT = 20;
-
+	private static final int maxCorrection = 175;
+	
 	private static final double PROPORTION_CONST = 5;
 
 	private final int bandCenter;
@@ -28,7 +27,6 @@ public class PController implements UltrasonicController {
 
 	@Override
 	public void processUSData(int distance) {
-
 		int diff, leftSpeed, rightSpeed;
 
 		// rudimentary filter - toss out invalid samples corresponding to null
@@ -48,11 +46,7 @@ public class PController implements UltrasonicController {
 			// distance went below 255: reset filter and leave
 			// distance alone.
 			filterControl = 0;
-			this.distance = distance;
-		}
-
-		if (this.distance <= 55) {
-			float floatDistance = this.distance / (float) 1.4;
+			float floatDistance = distance / (float) 1.4;
 
 			this.distance = (int) floatDistance;
 		}
@@ -93,8 +87,8 @@ public class PController implements UltrasonicController {
 
 		speedCorrection = (int) (PROPORTION_CONST * errorVal);
 
-		if (speedCorrection >= MOTOR_SPEED)
-			speedCorrection = 50;
+		if (speedCorrection >= maxCorrection)
+			speedCorrection = 35;
 
 		return speedCorrection;
 
