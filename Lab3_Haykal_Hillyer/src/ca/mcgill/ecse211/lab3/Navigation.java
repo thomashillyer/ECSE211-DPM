@@ -1,6 +1,9 @@
 package ca.mcgill.ecse211.lab3;
 
-public class Navigation {
+public class Navigation extends Thread {
+	private static final int FORWARD_SPEED = 250;
+	private static final int ROTATE_SPEED = 75;
+
 	public void travelTo(double x, double y) {
 		// This method causes the robot to travel to the absolute field location (x, y),
 		// specified in tile points.This method should continuously call turnTo(double
@@ -19,5 +22,9 @@ public class Navigation {
 		// the method has yet to return; false otherwise
 
 		return false;
+	}
+
+	public void run() {
+
 	}
 }
