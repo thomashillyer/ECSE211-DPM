@@ -23,7 +23,7 @@ public class NavigationLab {
 	public static void main(String[] args) {
 		int buttonChoice;
 
-		/* taken straight from lab 1 */
+		/* taken straight from lab 1 
 		@SuppressWarnings("resource") // Because we don't bother to close this resource
 		// usSensor is the instance
 		SensorModes usSensor = new EV3UltrasonicSensor(usPort);
@@ -31,12 +31,14 @@ public class NavigationLab {
 		SampleProvider usDistance = usSensor.getMode("Distance");
 		// usData is the buffer in which data are returned
 		float[] usData = new float[usDistance.sampleSize()];
-		/* End lab 1 code */
+		 End lab 1 code */
 
 		final TextLCD screen = LocalEV3.get().getTextLCD();
 		Odometer odometer = new Odometer(leftMotor, rightMotor);
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, screen);
-		// OdometryCorrection odometryCorrection = new OdometryCorrection(odometer);
+
+		Navigation navigationPartOne = new Navigation(odometer, leftMotor, rightMotor);
+		// Navigation navigationPartTwo = new Navigation( odometer, leftMotor,  rightMotor);
 
 		do {
 			// clear the display
@@ -45,22 +47,27 @@ public class NavigationLab {
 			// ask the user to confirm the start
 			screen.drawString("< Left | Right >", 0, 0);
 			screen.drawString("       |        ", 0, 1);
-			screen.drawString("Nav w/ | Nav    ", 0, 2);
-			screen.drawString("obst.  |        ", 0, 3);
+			screen.drawString("Nav    | Nav w/ ", 0, 2);
+			screen.drawString("       | Obst   ", 0, 3);
 			screen.drawString("       |        ", 0, 4);
 
 			buttonChoice = Button.waitForAnyPress();
-		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT); // can probably modify this and
-																						// just start on any button
-																						// press
+		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
 
 		if (buttonChoice == Button.ID_LEFT) {
-		} else {
-
+			// navigation normal
 			odometer.start();
 			odometryDisplay.start();
 
-			// odometryCorrection.start();
+			navigationPartOne.start();
+		} else {
+			// navigation obstacle avoidance
+			/*
+			 * odometer.start(); odometryDisplay.start(); navigationPartTwo.start();
+			 * 
+			 * USPoller uspoller = new USPoller(usDistance, usData, navpttwo, odometer,
+			 * navptone, leftMotor, rightMotor); uspoller.start();
+			 */
 		}
 
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE)
