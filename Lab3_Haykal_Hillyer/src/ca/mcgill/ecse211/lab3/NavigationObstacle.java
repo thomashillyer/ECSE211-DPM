@@ -2,15 +2,23 @@ package ca.mcgill.ecse211.lab3;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-public class NavigationObstacle extends Thread {
+public class NavigationObstacle extends Thread implements UltrasonicController {
 	private static final int FORWARD_SPEED = 250;
 	private static final int ROTATE_SPEED = 75;
 	private static final int ACCELERATION = 200;
+	private static final int FILTER_OUT = 20;
+	private static final int BAND_CENTER = 10;
+	private static final int BAND_WIDTH = 5;
+	private static final int MAX_DISTANCE = 150; // max distance to allow through the filter
+
 	private Odometer odometer;
 	private EV3LargeRegulatedMotor leftMotor, rightMotor;
 	private double currX = 0.0;
 	private double currY = 0.0;
 	private double currTheta = 0.0;
+
+	private static int filterControl;
+	private int distance;
 
 	private boolean isNavigating = false;
 
@@ -22,6 +30,8 @@ public class NavigationObstacle extends Thread {
 		this.odometer = odometer;
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
+
+		this.filterControl = 0;
 
 	}
 
@@ -37,8 +47,8 @@ public class NavigationObstacle extends Thread {
 
 		// rename one of these just "map" to test
 		int[][] map1 = { { 0, 2 }, { 1, 1 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map = { { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map3 = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 } };
+		int[][] map2 = { { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
+		int[][] map = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 } };
 		int[][] map4 = { { 0, 1 }, { 1, 2 }, { 1, 0 }, { 2, 1 }, { 2, 2 } };
 
 		travelTo(map[0][0], map[0][1]);
@@ -135,5 +145,44 @@ public class NavigationObstacle extends Thread {
 
 	private static int convertAngle(double radius, double width, double angle) {
 		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	}
+
+	@Override
+	public void processUSData(int distance) {
+
+		filterData(distance);
+		
+		System.out.println(this.distance);
+
+		if(this.distance < BAND_CENTER - BAND_WIDTH){
+			leftMotor.stop();
+			rightMotor.stop();
+		}
+	}
+
+	@Override
+	public int readUSDistance() {
+		return this.distance;
+	}
+
+	private void filterData(int distance) {
+
+		if (distance >= MAX_DISTANCE && filterControl < FILTER_OUT) {
+			// bad value, do not set the distance var, however do increment the
+			// filter value
+			filterControl++;
+		} else if (distance >= MAX_DISTANCE) {
+			// We have repeated large values, so there must actually be nothing
+			// there: leave the distance alone
+			this.distance = distance;
+		} else {
+			// distance went below 255: reset filter and leave
+			// distance alone.
+			filterControl = 0;
+
+			float floatDistance = distance / (float) 1.4;
+
+			this.distance = (int) floatDistance;
+		}
 	}
 }
