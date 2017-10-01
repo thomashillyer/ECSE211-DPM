@@ -2,7 +2,7 @@ package ca.mcgill.ecse211.lab3;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
-public class Navigation extends Thread {
+public class NavigationObstacle extends Thread {
 	private static final int FORWARD_SPEED = 250;
 	private static final int ROTATE_SPEED = 75;
 	private static final int ACCELERATION = 200;
@@ -18,7 +18,7 @@ public class Navigation extends Thread {
 	private static final double WHEEL_RADIUS = 2.1;
 	private static final double TILE_LENGTH = 30.48;
 
-	public Navigation(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
+	public NavigationObstacle(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
 		this.odometer = odometer;
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
@@ -78,7 +78,13 @@ public class Navigation extends Thread {
 		rightMotor.setSpeed(FORWARD_SPEED);
 
 		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
-		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), false);
+		// difference is set this to true so it doesnt block
+		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
+
+		// isMoving is set true while the motor is trying to rotate, from the rotate
+		// method above
+		while (leftMotor.isMoving() && rightMotor.isMoving())
+			;
 
 		leftMotor.stop(true);
 		rightMotor.stop(true);
@@ -113,7 +119,6 @@ public class Navigation extends Thread {
 			leftMotor.rotate(convertAngle(WHEEL_RADIUS, WHEEL_BASE, theta), true);
 			rightMotor.rotate(-convertAngle(WHEEL_RADIUS, WHEEL_BASE, theta), false);
 		}
-
 		isNavigating = false;
 	}
 
