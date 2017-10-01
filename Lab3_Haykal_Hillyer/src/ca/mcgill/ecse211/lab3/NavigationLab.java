@@ -16,6 +16,8 @@ public class NavigationLab {
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 	// Right motor connected to output D
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	// Sensor motor connected to output B
+	private static final EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 
 	public static final double WHEEL_RADIUS = 2.1;
 	public static final double TRACK = 11.5;
@@ -36,7 +38,7 @@ public class NavigationLab {
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, screen);
 
 		Navigation navigationPartOne = new Navigation(odometer, leftMotor, rightMotor);
-		NavigationObstacle navigationPartTwo = new NavigationObstacle(odometer, leftMotor, rightMotor);
+		NavigationObstacle navigationPartTwo = new NavigationObstacle(odometer, leftMotor, rightMotor, sensorMotor);
 
 		do {
 			// clear the display

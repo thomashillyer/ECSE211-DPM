@@ -12,7 +12,7 @@ public class NavigationObstacle extends Thread implements UltrasonicController {
 	private static final int MAX_DISTANCE = 150; // max distance to allow through the filter
 
 	private Odometer odometer;
-	private EV3LargeRegulatedMotor leftMotor, rightMotor;
+	private EV3LargeRegulatedMotor leftMotor, rightMotor, sensorMotor;
 	private double currX = 0.0;
 	private double currY = 0.0;
 	private double currTheta = 0.0;
@@ -26,10 +26,12 @@ public class NavigationObstacle extends Thread implements UltrasonicController {
 	private static final double WHEEL_RADIUS = 2.1;
 	private static final double TILE_LENGTH = 30.48;
 
-	public NavigationObstacle(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor) {
+	public NavigationObstacle(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
+			EV3LargeRegulatedMotor sensorMotor) {
 		this.odometer = odometer;
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
+		this.sensorMotor = sensorMotor;
 
 		this.filterControl = 0;
 
@@ -88,7 +90,7 @@ public class NavigationObstacle extends Thread implements UltrasonicController {
 		rightMotor.setSpeed(FORWARD_SPEED);
 
 		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
-		// difference is set this to true so it doesnt block
+		// difference is set this to true so it doesn't block
 		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
 
 		// isMoving is set true while the motor is trying to rotate, from the rotate
@@ -150,13 +152,21 @@ public class NavigationObstacle extends Thread implements UltrasonicController {
 	@Override
 	public void processUSData(int distance) {
 
-		filterData(distance);
-		
+		// filterData(distance);
+
+		this.distance = distance;
+
 		System.out.println(this.distance);
 
-		if(this.distance < BAND_CENTER - BAND_WIDTH){
+		if (this.distance < BAND_CENTER + BAND_WIDTH) {
 			leftMotor.stop();
 			rightMotor.stop();
+			// turn 90 degrees
+			turnTo(odometer.getTheta() + Math.PI / 2);
+
+			// turn the sensor motor 45 degrees
+			sensorMotor.setSpeed(ROTATE_SPEED);
+			sensorMotor.rotate(-45);
 		}
 	}
 
