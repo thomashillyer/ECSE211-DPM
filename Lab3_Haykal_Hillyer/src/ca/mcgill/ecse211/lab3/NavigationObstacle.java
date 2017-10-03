@@ -8,8 +8,8 @@ public class NavigationObstacle extends Thread implements UltrasonicController {
 	private Odometer odometer;
 	private EV3LargeRegulatedMotor leftMotor, rightMotor , sensorMotor;
 
-	private final double RADIUS = 2.093;
-	private final double TRACK = 11.9;
+	private final double RADIUS = 2.1;//2.093;
+	private final double TRACK = 11.78;//11.9
 	private static double Tile_Length = 30.48;
 
 	private static final int FWSPEED = 150;
