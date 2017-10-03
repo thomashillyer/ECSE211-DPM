@@ -3,18 +3,15 @@ package ca.mcgill.ecse211.lab3;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
 public class Navigation extends Thread {
-	private static final int FORWARD_SPEED = 250;
-	private static final int ROTATE_SPEED = 75;
-	private static final int ACCELERATION = 200;
+	private static final int FORWARD_SPEED = 150;
+	private static final int ROTATE_SPEED = 50;
 	private Odometer odometer;
 	private EV3LargeRegulatedMotor leftMotor, rightMotor;
 	private double currX = 0.0;
 	private double currY = 0.0;
 	private double currTheta = 0.0;
 
-	private boolean isNavigating = false;
-
-	private static final double WHEEL_BASE = 11.5;
+	private static final double WHEEL_BASE = 11.8;
 	private static final double WHEEL_RADIUS = 2.1;
 	private static final double TILE_LENGTH = 30.48;
 
@@ -31,25 +28,16 @@ public class Navigation extends Thread {
 		odometer.setTheta(0);
 
 		leftMotor.stop(true);
-		leftMotor.setAcceleration(ACCELERATION);
 		rightMotor.stop(true);
-		rightMotor.setAcceleration(ACCELERATION);
 
 		// rename one of these just "map" to test
-		int[][] map1 = { { 0, 2 }, { 1, 1 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map = { { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map3 = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 } };
-		int[][] map4 = { { 0, 1 }, { 1, 2 }, { 1, 0 }, { 2, 1 }, { 2, 2 } };
+		int[][] map1 = { { 2, 1 }, { 1, 1 }, { 1, 2 }, { 2, 0 } };
 
-		travelTo(map[0][0], map[0][1]);
-		travelTo(map[1][0], map[1][1]);
-		travelTo(map[2][0], map[2][1]);
-		travelTo(map[3][0], map[3][1]);
-		travelTo(map[4][0], map[4][1]);
+		travelTo(map1[0][0], map1[0][1]);
+		travelTo(map1[1][0], map1[1][1]);
+		travelTo(map1[2][0], map1[2][1]);
+		travelTo(map1[3][0], map1[3][1]);
 
-		// testing
-		// travelTo(0, 1);
-		// travelTo(1, 1);
 	}
 
 	public void travelTo(double x, double y) {
@@ -58,7 +46,6 @@ public class Navigation extends Thread {
 		// theta) and then set the motor speed to forward(straight). This will make sure
 		// that your heading is updated until you reach your exact goal. This method
 		// will poll the odometer for information
-		isNavigating = true;
 
 		currX = odometer.getX();
 		currY = odometer.getY();
@@ -66,6 +53,7 @@ public class Navigation extends Thread {
 
 		double deltaX = (x * TILE_LENGTH) - currX;
 		double deltaY = (y * TILE_LENGTH) - currY;
+		
 		double deltaTheta = Math.atan2(deltaX, deltaY) - currTheta;
 
 		turnTo(deltaTheta);
@@ -83,26 +71,22 @@ public class Navigation extends Thread {
 		leftMotor.stop(true);
 		rightMotor.stop(true);
 
-		isNavigating = false;
 	}
 
 	public void turnTo(double theta) {
 		// this method should turn (on point) to the absolute heading theta, by using a
 		// minimal angle
-
-		isNavigating = true;
-
-		if (theta < -Math.PI) {
+		leftMotor.setSpeed(ROTATE_SPEED);
+		rightMotor.setSpeed(ROTATE_SPEED);
+		
+		if (theta <= -Math.PI) {
 			theta += Math.PI * 2;
 		} else if (theta > Math.PI) {
 			theta -= Math.PI * 2;
 		}
 
-		theta = theta * 180 / Math.PI;
-
-		leftMotor.setSpeed(ROTATE_SPEED);
-		rightMotor.setSpeed(ROTATE_SPEED);
-
+		theta = theta * 180.0 / Math.PI;
+		
 		// turn to the left if angle is negative
 		if (theta < 0) {
 			leftMotor.rotate(-convertAngle(WHEEL_RADIUS, WHEEL_BASE, -theta), true);
@@ -114,15 +98,8 @@ public class Navigation extends Thread {
 			rightMotor.rotate(-convertAngle(WHEEL_RADIUS, WHEEL_BASE, theta), false);
 		}
 
-		isNavigating = false;
 	}
 
-	public boolean isNavigating() {
-		// method returns true if another thread has called travelTo() or turnTo() and
-		// the method has yet to return; false otherwise
-
-		return isNavigating;
-	}
 
 	private static int convertDistance(double radius, double distance) {
 		return (int) ((180.0 * distance) / (Math.PI * radius));

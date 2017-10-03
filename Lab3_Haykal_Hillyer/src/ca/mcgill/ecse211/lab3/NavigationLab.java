@@ -13,14 +13,14 @@ public class NavigationLab {
 	// Ultrasonic sensor connected to port S2
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	// Left motor connected to output A
-	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 	// Right motor connected to output D
-	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
 	// Sensor motor connected to output B
-	private static final EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
+	private static final EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
 	public static final double WHEEL_RADIUS = 2.1;
-	public static final double TRACK = 11.5;
+	public static final double TRACK = 11.9;
 
 	public static void main(String[] args) {
 		int buttonChoice;
@@ -38,7 +38,7 @@ public class NavigationLab {
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, screen);
 
 		Navigation navigationPartOne = new Navigation(odometer, leftMotor, rightMotor);
-		NavigationObstacle navigationPartTwo = new NavigationObstacle(odometer, leftMotor, rightMotor, sensorMotor);
+		NavigationObstacle navigationPartTwo = new NavigationObstacle(leftMotor, rightMotor, sensorMotor, odometer);
 
 		do {
 			// clear the display

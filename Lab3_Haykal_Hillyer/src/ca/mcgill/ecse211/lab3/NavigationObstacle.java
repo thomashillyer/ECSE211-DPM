@@ -2,197 +2,202 @@ package ca.mcgill.ecse211.lab3;
 
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 
+
 public class NavigationObstacle extends Thread implements UltrasonicController {
-	private static final int FORWARD_SPEED = 250;
-	private static final int ROTATE_SPEED = 75;
-	private static final int ACCELERATION = 200;
-	private static final int FILTER_OUT = 20;
-	private static final int BAND_CENTER = 10;
-	private static final int BAND_WIDTH = 5;
-	private static final int MAX_DISTANCE = 150; // max distance to allow through the filter
-
+ 
 	private Odometer odometer;
-	private EV3LargeRegulatedMotor leftMotor, rightMotor, sensorMotor;
-	private double currX = 0.0;
-	private double currY = 0.0;
-	private double currTheta = 0.0;
+	private EV3LargeRegulatedMotor leftMotor, rightMotor , sensorMotor;
 
-	private static int filterControl;
-	private int distance;
+	private final double RADIUS = 2.093;
+	private final double TRACK = 11.9;
+	private static double Tile_Length = 30.48;
 
-	private boolean isNavigating = false;
+	private static final int FWSPEED = 150;
+	private static final int DTSPEED = 50;
+	private static final int RTSPEED = 50;
+	private static final int MTRACCEL = 50;
 
-	private static final double WHEEL_BASE = 11.5;
-	private static final double WHEEL_RADIUS = 2.1;
-	private static final double TILE_LENGTH = 30.48;
+	private static boolean isWallFollowing = false;
+	
+	private static final int FILTER_OUT = 20;
 
-	public NavigationObstacle(Odometer odometer, EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,
-			EV3LargeRegulatedMotor sensorMotor) {
-		this.odometer = odometer;
+
+	private int distanceUS;
+	private int filterControl;
+	private final int backwardControl = 5;
+
+	private final int bandCenter;
+	private float distanceError;
+	
+	private double blockAngle = 0;
+	
+	private int[][] wayPoints = {{2, 1}, {1 , 1}, {1 , 2}, {2 , 0}};
+	
+	private int count = 0;
+
+	public NavigationObstacle(EV3LargeRegulatedMotor leftMotor, EV3LargeRegulatedMotor rightMotor,EV3LargeRegulatedMotor sensorMotor, Odometer odometer) {
 		this.leftMotor = leftMotor;
 		this.rightMotor = rightMotor;
 		this.sensorMotor = sensorMotor;
-
-		this.filterControl = 0;
-
+		this.odometer = odometer;
+		this.bandCenter= 13;
 	}
-
-	public void run() {
-		odometer.setX(0);
-		odometer.setY(0);
-		odometer.setTheta(0);
-
-		leftMotor.stop(true);
-		leftMotor.setAcceleration(ACCELERATION);
-		rightMotor.stop(true);
-		rightMotor.setAcceleration(ACCELERATION);
-
-		// rename one of these just "map" to test
-		int[][] map1 = { { 0, 2 }, { 1, 1 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map2 = { { 1, 1 }, { 0, 2 }, { 2, 2 }, { 2, 1 }, { 1, 0 } };
-		int[][] map = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 } };
-		int[][] map4 = { { 0, 1 }, { 1, 2 }, { 1, 0 }, { 2, 1 }, { 2, 2 } };
-
-		travelTo(map[0][0], map[0][1]);
-		travelTo(map[1][0], map[1][1]);
-		travelTo(map[2][0], map[2][1]);
-		travelTo(map[3][0], map[3][1]);
-		travelTo(map[4][0], map[4][1]);
-
-		// testing
-		// travelTo(0, 1);
-		// travelTo(1, 1);
-	}
-
-	public void travelTo(double x, double y) {
-		// This method causes the robot to travel to the absolute field location (x, y),
-		// specified in tile points.This method should continuously call turnTo(double
-		// theta) and then set the motor speed to forward(straight). This will make sure
-		// that your heading is updated until you reach your exact goal. This method
-		// will poll the odometer for information
-		isNavigating = true;
-
-		currX = odometer.getX();
-		currY = odometer.getY();
-		currTheta = odometer.getTheta();
-
-		double deltaX = (x * TILE_LENGTH) - currX;
-		double deltaY = (y * TILE_LENGTH) - currY;
-		double deltaTheta = Math.atan2(deltaX, deltaY) - currTheta;
-
-		turnTo(deltaTheta);
-
-		// find hypotenuse
-		double distToTravel = Math.pow(deltaX, 2) + Math.pow(deltaY, 2);
-		distToTravel = Math.sqrt(distToTravel);
-
-		leftMotor.setSpeed(FORWARD_SPEED);
-		rightMotor.setSpeed(FORWARD_SPEED);
-
-		rightMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
-		// difference is set this to true so it doesn't block
-		leftMotor.rotate(convertDistance(WHEEL_RADIUS, distToTravel), true);
-
-		// isMoving is set true while the motor is trying to rotate, from the rotate
-		// method above
-		while (leftMotor.isMoving() && rightMotor.isMoving())
-			;
-
-		leftMotor.stop(true);
-		rightMotor.stop(true);
-
-		isNavigating = false;
-	}
-
-	public void turnTo(double theta) {
-		// this method should turn (on point) to the absolute heading theta, by using a
-		// minimal angle
-
-		isNavigating = true;
-
-		if (theta < -Math.PI) {
-			theta += Math.PI * 2;
-		} else if (theta > Math.PI) {
-			theta -= Math.PI * 2;
-		}
-
-		theta = theta * 180 / Math.PI;
-
-		leftMotor.setSpeed(ROTATE_SPEED);
-		rightMotor.setSpeed(ROTATE_SPEED);
-
-		// turn to the left if angle is negative
-		if (theta < 0) {
-			leftMotor.rotate(-convertAngle(WHEEL_RADIUS, WHEEL_BASE, -theta), true);
-			rightMotor.rotate(convertAngle(WHEEL_RADIUS, WHEEL_BASE, -theta), false);
-		}
-		// turn to the right if angle is positive
-		else {
-			leftMotor.rotate(convertAngle(WHEEL_RADIUS, WHEEL_BASE, theta), true);
-			rightMotor.rotate(-convertAngle(WHEEL_RADIUS, WHEEL_BASE, theta), false);
-		}
-		isNavigating = false;
-	}
-
-	public boolean isNavigating() {
-		// method returns true if another thread has called travelTo() or turnTo() and
-		// the method has yet to return; false otherwise
-
-		return isNavigating;
-	}
-
-	private static int convertDistance(double radius, double distance) {
-		return (int) ((180.0 * distance) / (Math.PI * radius));
-	}
-
-	private static int convertAngle(double radius, double width, double angle) {
-		return convertDistance(radius, Math.PI * width * angle / 360.0);
+	
+	@Override
+	public int readUSDistance() {
+		return this.distanceUS;
 	}
 
 	@Override
 	public void processUSData(int distance) {
-
-		// filterData(distance);
-
-		this.distance = distance;
-
-		System.out.println(this.distance);
-
-		if (this.distance < BAND_CENTER + BAND_WIDTH) {
-			leftMotor.stop();
-			rightMotor.stop();
-			// turn 90 degrees
-			turnTo(odometer.getTheta() + Math.PI / 2);
-
-			// turn the sensor motor 45 degrees
-			sensorMotor.setSpeed(ROTATE_SPEED);
-			sensorMotor.rotate(-45);
-		}
-	}
-
-	@Override
-	public int readUSDistance() {
-		return this.distance;
-	}
-
-	private void filterData(int distance) {
-
-		if (distance >= MAX_DISTANCE && filterControl < FILTER_OUT) {
+		if (distance >= 255 && filterControl < FILTER_OUT) {
 			// bad value, do not set the distance var, however do increment the
 			// filter value
 			filterControl++;
-		} else if (distance >= MAX_DISTANCE) {
+		} else if (distance >= 255) {
 			// We have repeated large values, so there must actually be nothing
 			// there: leave the distance alone
-			this.distance = distance;
+			this.distanceUS = distance;
 		} else {
 			// distance went below 255: reset filter and leave
 			// distance alone.
 			filterControl = 0;
+			this.distanceUS = distance;
+		}
+		// process a movement based on the us distance passed in (BANG-BANG style)
+		//here we get the distance of the sensor positioned at a 45 degrees angle
 
-			float floatDistance = distance / (float) 1.4;
+		// Supposed to be root 2 but sensor is not exactly 45 degrees
+		// so we take an arbitrary value called anglePosition
+		float distanceRoot = (float) distance;
+				
+		//calculate the error of the robot by subtracting the actual distance to the wanted distance
+		this.distanceError = bandCenter - distanceRoot;
+	}
 
-			this.distance = (int) floatDistance;
+	public void run(){
+
+		leftMotor.stop();
+
+		rightMotor.stop();
+		
+		sensorMotor.stop();
+		sensorMotor.setAcceleration(MTRACCEL);
+	
+//		travelTo(1*Tile_Length , 0*Tile_Length);
+//		travelTo(2*Tile_Length , 1*Tile_Length);
+//		travelTo(2*Tile_Length , 2*Tile_Length);
+//		travelTo(0*Tile_Length , 2*Tile_Length);
+//		travelTo(1*Tile_Length , 1*Tile_Length);
+		
+		for(count = 0 ; count < wayPoints.length ; count++){
+			travelTo(wayPoints[count][0]*Tile_Length, wayPoints[count][1]*Tile_Length);
 		}
 	}
+	
+	private void travelTo(double x , double y){
+		double deltaX = x - odometer.getX();
+		double deltaY = y - odometer.getY();
+
+		double minimumAngle =  Math.atan2( deltaX , deltaY) - odometer.getTheta();
+
+		turnTo(minimumAngle);
+
+		// calculate the distance to next point
+		double distance  = Math.hypot(deltaX, deltaY);
+
+
+		// move to the next point
+		leftMotor.setSpeed(FWSPEED);
+		rightMotor.setSpeed(FWSPEED);
+		leftMotor.rotate(convertDistance(RADIUS,distance), true);
+		rightMotor.rotate(convertDistance(RADIUS, distance), true);
+
+		while( (rightMotor.isMoving() && leftMotor.isMoving()) ){
+
+			if((distanceUS < bandCenter)&&(!isWallFollowing)){
+				
+				blockAngle = odometer.getTheta();
+				
+				isWallFollowing = true;
+				leftMotor.stop(true);
+				rightMotor.stop(true);
+				leftMotor.rotate(convertAngle(RADIUS, TRACK, 90), true);
+				rightMotor.rotate(-convertAngle(RADIUS, TRACK, 90), false);
+				sensorMotor.rotate(-90);
+				
+			}
+
+
+			if(isWallFollowing){
+				if (distanceError >= 0 && distanceError < bandCenter/2 + backwardControl){
+
+					rightMotor.setSpeed(FWSPEED-DTSPEED);
+					leftMotor.setSpeed(FWSPEED+DTSPEED);
+					rightMotor.forward();
+					leftMotor.forward();
+				}
+
+				else if(distanceError >= bandCenter/2 - backwardControl ){
+					rightMotor.setSpeed(FWSPEED+DTSPEED);
+					leftMotor.setSpeed(FWSPEED+DTSPEED);
+					rightMotor.backward();
+					leftMotor.backward();
+				}
+
+				else if (distanceError < 0){
+					leftMotor.setSpeed(FWSPEED-DTSPEED);
+					rightMotor.setSpeed(FWSPEED+DTSPEED);
+					rightMotor.forward();
+					leftMotor.forward();
+				}
+			}
+			
+			if(isWallFollowing && ( blockAngle - odometer.getTheta() > Math.PI/4)){
+				leftMotor.stop();
+				rightMotor.stop();
+				sensorMotor.rotate(90, true);
+				
+				isWallFollowing = false;
+				
+				count--;
+				break;
+			}
+		}	
+
+
+		leftMotor.stop(true);
+		rightMotor.stop(true);
+	}
+
+	private void turnTo(double theta) {
+		leftMotor.setSpeed(RTSPEED);
+		rightMotor.setSpeed(RTSPEED);
+
+		if(theta > Math.PI){
+			theta -= 2*Math.PI;
+
+		}
+		else if(theta<=-Math.PI){
+			theta += 2*Math.PI;
+		}
+
+		if(theta < 0) { 
+			leftMotor.rotate(-convertAngle(RADIUS, TRACK, -(theta*180)/Math.PI), true);
+			rightMotor.rotate(convertAngle(RADIUS, TRACK, -(theta*180)/Math.PI), false);
+		} 
+		else { 
+			leftMotor.rotate(convertAngle(RADIUS, TRACK, (theta*180)/Math.PI), true);
+			rightMotor.rotate(-convertAngle(RADIUS, TRACK, (theta*180)/Math.PI), false);
+		}
+	}
+	
+	private static int convertDistance(double radius, double distance) {
+		return (int) ((180.0 * distance) / (Math.PI * radius));
+	}
+	private static int convertAngle(double radius, double TRACK, double angle) {
+		return convertDistance(radius, Math.PI * TRACK * angle / 360.0);
+	}
+
+
 }
