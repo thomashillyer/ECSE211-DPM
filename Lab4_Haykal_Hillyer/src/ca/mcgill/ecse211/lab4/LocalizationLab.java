@@ -49,11 +49,11 @@ public class LocalizationLab {
 			screen.clear();
 
 			// ask the user to confirm the start
-			screen.drawString("< Left     | Right >", 0, 0);
-			screen.drawString("           |        ", 0, 1);
-			screen.drawString(" falling   | Rising ", 0, 2);
-			screen.drawString("           |    	   ", 0, 3);
-			screen.drawString("           |        ", 0, 4);
+			screen.drawString("< Left    | Right >", 0, 0);
+			screen.drawString("          |        ", 0, 1);
+			screen.drawString(" falling  | Rising ", 0, 2);
+			screen.drawString("          |    	   ", 0, 3);
+			screen.drawString("          |        ", 0, 4);
 
 			buttonChoice = Button.waitForAnyPress();
 		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
