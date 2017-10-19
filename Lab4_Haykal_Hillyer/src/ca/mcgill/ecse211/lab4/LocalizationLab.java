@@ -11,17 +11,16 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 public class LocalizationLab {
+	
 	// Ultrasonic sensor connected to port S2
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	// Left motor connected to output A
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
 	// Right motor connected to output D
-	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
-	// Sensor motor connected to output B
-	private static final EV3LargeRegulatedMotor sensorMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
 	public static final double WHEEL_RADIUS = 2.1;
-	public static final double TRACK = 11.9;
+	public static final double TRACK = 12.3;
 
 	public static void main(String[] args) {
 		int buttonChoice;
@@ -38,8 +37,6 @@ public class LocalizationLab {
 		Odometer odometer = new Odometer(leftMotor, rightMotor);
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, screen);
 
-		Navigation navigationPartOne = new Navigation(odometer, leftMotor, rightMotor);
-		NavigationObstacle navigationPartTwo = new NavigationObstacle(leftMotor, rightMotor, sensorMotor, odometer);
 		FallingEdgeLocalization FallingLocalization = new FallingEdgeLocalization(leftMotor, rightMotor, odometer);
 		RaisingEdgeLocalization raisingLocalization = new RaisingEdgeLocalization(leftMotor, rightMotor, odometer);
 		LightSensorLocalization lightSensorLocalization = new LightSensorLocalization(leftMotor, rightMotor, odometer);
@@ -49,11 +46,11 @@ public class LocalizationLab {
 			screen.clear();
 
 			// ask the user to confirm the start
-			screen.drawString("< Left    | Right >", 0, 0);
-			screen.drawString("          |        ", 0, 1);
-			screen.drawString(" falling  | Rising ", 0, 2);
-			screen.drawString("          |    	   ", 0, 3);
-			screen.drawString("          |        ", 0, 4);
+			screen.drawString("< Left   | Right >", 0, 0);
+			screen.drawString("         |        ", 0, 1);
+			screen.drawString(" falling | Rising ", 0, 2);
+			screen.drawString("         |    	 ", 0, 3);
+			screen.drawString("         |        ", 0, 4);
 
 			buttonChoice = Button.waitForAnyPress();
 		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
@@ -65,8 +62,6 @@ public class LocalizationLab {
 			UltrasonicPoller usPoller = new UltrasonicPoller(usDistance, usData, FallingLocalization);
 			usPoller.start();
 
-			//navigationPartTwo.start();
-
 			FallingLocalization.start();
 			lightSensorLocalization.start();
 		} else {
@@ -76,16 +71,12 @@ public class LocalizationLab {
 			UltrasonicPoller usPoller = new UltrasonicPoller(usDistance, usData, raisingLocalization);
 			usPoller.start();
 
-			//navigationPartTwo.start();
-
 			raisingLocalization.start();
 			lightSensorLocalization.start();
-
 		}
 			
 
-		while (Button.waitForAnyPress() != Button.ID_ESCAPE)
-			;
+		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		System.exit(0);
 	}
 }

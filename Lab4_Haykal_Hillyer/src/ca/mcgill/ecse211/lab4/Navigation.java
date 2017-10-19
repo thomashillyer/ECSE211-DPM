@@ -6,7 +6,7 @@ public class Navigation extends Thread {
 
 	private static final int FORWARD_SPEED = 150;
 	private static final int ROTATE_SPEED = 50;
-	private static final double WHEEL_BASE = 11.9;
+	private static final double WHEEL_BASE = 12.3;
 	private static final double WHEEL_RADIUS = 2.1;
 	private static final double TILE_LENGTH = 30.48;
 
