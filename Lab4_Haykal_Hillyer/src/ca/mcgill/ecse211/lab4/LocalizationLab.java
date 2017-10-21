@@ -11,7 +11,7 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 public class LocalizationLab {
-	
+
 	// Ultrasonic sensor connected to port S2
 	private static final Port usPort = LocalEV3.get().getPort("S1");
 	// Left motor connected to output A
@@ -20,12 +20,13 @@ public class LocalizationLab {
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
 	public static final double WHEEL_RADIUS = 2.1;
-	public static final double TRACK = 12.3;
+	public static final double TRACK = 16;
 
 	public static void main(String[] args) {
 		int buttonChoice;
 
-		@SuppressWarnings("resource") // Because we don't bother to close this resource
+		@SuppressWarnings("resource") // Because we don't bother to close this
+										// resource
 		// usSensor is the instance
 		SensorModes usSensor = new EV3UltrasonicSensor(usPort);
 		// usDistance provides samples from this instance
@@ -38,9 +39,9 @@ public class LocalizationLab {
 		OdometryDisplay odometryDisplay = new OdometryDisplay(odometer, screen);
 
 		FallingEdgeLocalization FallingLocalization = new FallingEdgeLocalization(leftMotor, rightMotor, odometer);
-		RaisingEdgeLocalization raisingLocalization = new RaisingEdgeLocalization(leftMotor, rightMotor, odometer);
+		RisingEdgeLocalization raisingLocalization = new RisingEdgeLocalization(leftMotor, rightMotor, odometer);
 		LightSensorLocalization lightSensorLocalization = new LightSensorLocalization(leftMotor, rightMotor, odometer);
-		
+
 		do {
 			// clear the display
 			screen.clear();
@@ -54,7 +55,7 @@ public class LocalizationLab {
 
 			buttonChoice = Button.waitForAnyPress();
 		} while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-		
+
 		if (buttonChoice == Button.ID_LEFT) {
 			odometer.start();
 			odometryDisplay.start();
@@ -74,7 +75,6 @@ public class LocalizationLab {
 			raisingLocalization.start();
 			lightSensorLocalization.start();
 		}
-			
 
 		while (Button.waitForAnyPress() != Button.ID_ESCAPE);
 		System.exit(0);

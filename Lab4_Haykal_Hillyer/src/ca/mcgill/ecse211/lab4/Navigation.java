@@ -6,7 +6,7 @@ public class Navigation extends Thread {
 
 	private static final int FORWARD_SPEED = 150;
 	private static final int ROTATE_SPEED = 50;
-	private static final double WHEEL_BASE = 12.3;
+	private static final double WHEEL_BASE = 16;
 	private static final double WHEEL_RADIUS = 2.1;
 	private static final double TILE_LENGTH = 30.48;
 
@@ -32,7 +32,7 @@ public class Navigation extends Thread {
 		rightMotor.stop(true);
 
 		// this map defines the way points to which the robot must travel
-		int[][] map1 = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, {1, 1} };
+		int[][] map1 = { { 1, 0 }, { 2, 1 }, { 2, 2 }, { 0, 2 }, { 1, 1 } };
 
 		travelTo(map1[0][0], map1[0][1]);
 		travelTo(map1[1][0], map1[1][1]);
@@ -74,7 +74,6 @@ public class Navigation extends Thread {
 
 		// calculate the distance to next point using the built in pythagore
 		// theorem
-		// TODO try Math.Pyth
 		double distToTravel = Math.pow(deltaX, 2) + Math.pow(deltaY, 2);
 		distToTravel = Math.sqrt(distToTravel);
 

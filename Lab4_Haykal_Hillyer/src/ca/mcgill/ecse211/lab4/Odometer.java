@@ -12,7 +12,7 @@ public class Odometer extends Thread {
 	private int leftMotorTachoCountOld;
 	private int rightMotorTachoCountOld;
 	private static final double PI = Math.PI;
-	private static final double WB = 12.15;
+	private static final double WB = 16;
 	private static final double WR = 2.1;
 	private EV3LargeRegulatedMotor leftMotor;
 	private EV3LargeRegulatedMotor rightMotor;
